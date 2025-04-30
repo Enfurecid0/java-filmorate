@@ -38,11 +38,9 @@ public class FilmService {
 
     public Film addFilm(Film film) {
         log.debug("Добавление фильма: {}", film);
-        
         if (film.getMpa() != null && !ratingMpaDbStorage.existsById(film.getMpa().getId())) {
             throw new ValidationException("MPA rating with id=" + film.getMpa().getId() + " does not exist");
         }
-
         // Проверка жанров
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
