@@ -4,7 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.RatingMpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -17,15 +21,37 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final LikeDbStorage likeDbStorage;
+    private final GenreDbStorage genreDbStorage;
+    private final RatingMpaDbStorage ratingMpaDbStorage;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage, LikeDbStorage likeDbStorage) {
+    public FilmService(FilmStorage filmStorage,
+                       GenreDbStorage genreDbStorage,
+                       RatingMpaDbStorage ratingMpaDbStorage,
+                       UserStorage userStorage,
+                       LikeDbStorage likeDbStorage) {
         this.filmStorage = filmStorage;
+        this.genreDbStorage = genreDbStorage;
+        this.ratingMpaDbStorage = ratingMpaDbStorage;
         this.likeDbStorage = likeDbStorage;
     }
 
     public Film addFilm(Film film) {
         log.debug("Добавление фильма: {}", film);
+        
+        if (film.getMpa() != null && !ratingMpaDbStorage.existsById(film.getMpa().getId())) {
+            throw new ValidationException("MPA rating with id=" + film.getMpa().getId() + " does not exist");
+        }
+
+        // Проверка жанров
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                if (!genreDbStorage.existsById(genre.getId())) {
+                    throw new ValidationException("Genre with id=" + genre.getId() + " does not exist");
+                }
+            }
+        }
+
         return filmStorage.createFilm(film);
     }
 

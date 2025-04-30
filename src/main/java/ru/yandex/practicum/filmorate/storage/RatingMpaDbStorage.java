@@ -35,4 +35,10 @@ public class RatingMpaDbStorage {
         }
         return ratingsMpa;
     }
+
+    public boolean existsById(int id) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM rating_mpa WHERE rating_id = ?", Integer.class, id);
+        return count != null && count > 0;
+    }
 }
