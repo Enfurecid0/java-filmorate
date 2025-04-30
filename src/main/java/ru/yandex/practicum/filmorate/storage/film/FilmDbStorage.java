@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.RatingMpa;
@@ -14,15 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -131,13 +124,23 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Set<Genre> getGenres(int filmId) {
-        Comparator<Genre> compId = Comparator.comparing(Genre::getId);
-        Set<Genre> genres = new TreeSet<>(compId);
-        String sqlQuery = "SELECT film_genres.genre_id, genres.genre_name FROM film_genres "
-                + "JOIN genres ON genres.genre_id = film_genres.genre_id "
-                + "WHERE film_id = ? ORDER BY genre_id ASC";
-        genres.addAll(jdbcTemplate.query(sqlQuery, this::makeGenre, filmId));
-        return genres;
+        Set<Genre> result = new LinkedHashSet<>();
+        String sqlQuery = "SELECT g.genre_id, g.genre_name FROM film_genres fg "
+                + "JOIN genres g ON fg.genre_id = g.genre_id "
+                + "WHERE fg.film_id = ? ORDER BY fg.genre_id ASC";
+
+        jdbcTemplate.query(sqlQuery, rs -> {
+            int genreId = rs.getInt("genre_id");
+            String genreName = rs.getString("genre_name");
+
+            if (genreName == null || genreName.isEmpty()) {
+                throw new ValidationException("Genre with id=" + genreId + " has empty name");
+            }
+
+            result.add(new Genre(genreId, genreName));
+        }, filmId);
+
+        return result;
     }
 
     private void deleteAllGenresById(int filmId) {
