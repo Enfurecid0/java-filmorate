@@ -37,8 +37,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getAllFilms() {
-        String sqlQuery = "SELECT films.film_id, films.film_name, films.description, films.duration, "
-                + "films.release_date, films.rating_id, rating_mpa.rating_name "
+        String sqlQuery = "SELECT * "
                 + "FROM films "
                 + "JOIN rating_mpa ON films.rating_id = rating_mpa.rating_id";
 
@@ -99,11 +98,6 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public void removeFilm(int filmId) {
-        String sqlQuery = "DELETE FROM films WHERE film_id = ?";
-    }
-
-    @Override
     public Film getFilmById(int filmId) {
         String sqlQuery = "SELECT * FROM films "
                 + "JOIN rating_mpa ON films.rating_id = rating_mpa.rating_id "
@@ -116,7 +110,7 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    public void addGenre(int filmId, Set<Genre> genres) {
+    private void addGenre(int filmId, Set<Genre> genres) {
         deleteAllGenresById(filmId);
         if (genres == null || genres.isEmpty()) {
             return;
@@ -151,12 +145,14 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sglQuery, filmId);
     }
 
+    @Override
     public void addLike(int filmId, int userId) {
         String sqlQuery = "INSERT INTO likes (film_id, user_id) "
                 + "VALUES (?, ?)";
         jdbcTemplate.update(sqlQuery, filmId, userId);
     }
 
+    @Override
     public void removeLike(int filmId, int userId) {
         String sqlQuery = "DELETE likes "
                 + "WHERE film_id = ? AND user_id = ?";

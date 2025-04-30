@@ -10,9 +10,6 @@ import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -51,19 +48,5 @@ public class LikeService {
         }
 
         likeStorage.deleteLike(filmId, userId);
-    }
-
-    public List<Film> getPopular(Integer count) {
-        log.debug("Запрос на получение популярных фильмов с count: {}", count);
-        try {
-            List<Film> popularFilms = likeStorage.getPopular(count);
-            if (popularFilms == null) {
-                popularFilms = new ArrayList<>();
-            }
-            return popularFilms;
-        } catch (Exception e) {
-            log.error("Ошибка при получении популярных фильмов", e);
-            return new ArrayList<>();
-        }
     }
 }

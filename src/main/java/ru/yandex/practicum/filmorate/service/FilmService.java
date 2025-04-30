@@ -48,13 +48,6 @@ public class FilmService {
         return film;
     }
 
-    public void removeFilm(int filmId) {
-        if (filmStorage.getFilmById(filmId) == null) {
-            throw new NotFoundException("Фильм с ID " + filmId + " не найден");
-        }
-        filmStorage.removeFilm(filmId);
-    }
-
     public List<Film> getAllFilms() {
         return filmStorage.getAllFilms();
     }

@@ -23,7 +23,7 @@ public class FilmController {
 
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
-        log.debug("Запрос на создание фильма: {}", film);
+        log.info("Запрос на создание фильма: {}", film);
         Film createdFilm = filmService.addFilm(film);
         log.info("Фильм создан: {}", createdFilm);
         return createdFilm;
@@ -42,12 +42,6 @@ public class FilmController {
     @GetMapping("/{filmId}")
     public Film getFilmById(@PathVariable int filmId) {
         return filmService.getFilmById(filmId);
-    }
-
-    @DeleteMapping("/{filmId}")
-    public void removeFilm(@PathVariable int filmId) {
-        filmService.removeFilm(filmId);
-        log.info("Фильм с ID {} был удален", filmId);
     }
 
     @GetMapping("/popular")
