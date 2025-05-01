@@ -3,15 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-@Slf4j
 @Service
+@Slf4j
 public class UserService {
 
     private final UserStorage userStorage;
@@ -34,75 +32,35 @@ public class UserService {
         return userStorage.getAllUsers();
     }
 
-    public Map<String, String> addFriend(int userId, int friendId) {
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendId);
+    public void addFriend(Integer userId, Integer friendId) {
+        checkUser(userId, friendId);
+        userStorage.addFriend(userId, friendId);
 
-        if (user == null || friend == null) {
-            int missingId = user == null ? userId : friendId;
-            throw new NotFoundException("Пользователь с ID " + missingId + " не найден.");
-        }
-
-        if (user.getFriends().contains(friendId)) {
-            return Map.of("Друг", friend.getName() + " уже у вас в друзьях");
-        }
-
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
-
-        userStorage.updateUser(user);
-        userStorage.updateUser(friend);
-
-        return Map.of("Друг", "Вы добавили " + friend.getName() + " в друзья");
+        log.info("Друг успешно добавлен");
     }
 
-    public Map<String, String> removeFriend(int userId, int friendId) {
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendId);
-
-        if (user == null || friend == null) {
-            int missingId = user == null ? userId : friendId;
-            throw new NotFoundException("Пользователь с ID " + missingId + " не найден.");
-        }
-
-        if (!user.getFriends().contains(friendId)) {
-            return Map.of("Друг", friend.getName() + " не у вас в друзьях");
-        }
-
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
-
-        userStorage.updateUser(user);
-        userStorage.updateUser(friend);
-
-        return Map.of("Друг", "Вы удалили " + friend.getName() + " из друзей");
+    public void removeFriend(Integer userId, Integer friendId) {
+        checkUser(userId, friendId);
+        userStorage.removeFriend(userId, friendId);
+        log.info("Друг успешно удален");
     }
 
-    public List<User> getCommonFriends(int userId, int friendId) {
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendId);
-        List<User> commonFriends = new ArrayList<>();
-
-        if (user == null || friend == null) {
-            int missingId = user == null ? userId : friendId;
-            throw new NotFoundException("Пользователь с ID " + missingId + " не найден.");
-        }
-
-        return user.getFriends().stream()
-                .filter(friendIdValue -> friend.getFriends().contains(friendIdValue))
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
+    public List<User> getAllFriends(Integer userId) {
+        checkUser(userId, userId);
+        List<User> result = userStorage.getFriends(userId);
+        log.info("Друзья пользователя с ID = " + userId + result);
+        return result;
     }
 
-    public List<User> getFriends(int userId) {
-        User user = userStorage.getUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с ID " + userId + " не найден.");
-        }
+    public List<User> getCommonFriends(Integer user1Id, Integer user2Id) {
+        checkUser(user1Id, user2Id);
+        List<User> result = userStorage.getCommonFriends(user1Id, user2Id);
+        log.info("Общие друзья пользователя с ID " + " {} и {} {} ", user1Id, user2Id, result);
+        return result;
+    }
 
-        return user.getFriends().stream()
-                .map(userStorage::getUserById)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    private void checkUser(Integer userId, Integer friendId) {
+        userStorage.getUserById(userId);
+        userStorage.getUserById(friendId);
     }
 }
